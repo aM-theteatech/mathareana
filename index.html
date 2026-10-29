@@ -290,10 +290,15 @@
                 <button onclick="verifyTeacherPin()" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-orbitron font-bold rounded-xl shadow-neon-purple text-xs transition">LOG MASUK GURU</button>
             </div>
 
-            <!-- Dashboard Content Section -->
+            <!-- TEACHER DASHBOARD MODAL -->
             <div id="teacher-content-section" class="hidden space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
-                    <div id="total-submissions-count" class="text-xs font-orbitron text-purple-300">Jumlah Kumpulan: 0</div>
+                    <div class="flex items-center space-x-2">
+                        <div id="total-submissions-count" class="text-xs font-orbitron text-purple-300">Jumlah Kumpulan: 0</div>
+                        <button onclick="fetchDataFromGoogleSheet()" class="px-2.5 py-1 bg-cyan-600/20 border border-cyan-500/40 hover:bg-cyan-600/40 text-cyan-300 rounded-lg text-xs font-orbitron transition flex items-center space-x-1">
+                            <i class="fa-solid fa-rotate mr-1"></i> <span>Sync Google Sheet</span>
+                        </button>
+                    </div>
                     <div class="flex space-x-2">
                         <button onclick="exportToCSV()" class="px-3 py-1.5 bg-green-600/20 border border-green-500/40 hover:bg-green-600/40 text-green-300 rounded-lg text-xs font-orbitron transition"><i class="fa-solid fa-file-excel mr-1"></i> Eksport Laporan Penuh (CSV)</button>
                         <button onclick="clearAllData()" class="px-3 py-1.5 bg-pink-600/20 border border-pink-500/40 hover:bg-pink-600/40 text-pink-300 rounded-lg text-xs font-orbitron transition"><i class="fa-solid fa-trash mr-1"></i> Padam Rekod</button>
@@ -397,6 +402,9 @@
         let timeLeft = 600; // 10 minutes in seconds
         let isSubmitted = false;
 
+        // URL Google Apps Script Web App
+        const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyuhfuaDPEeRp9RAkEy5qf52eIYy86LLaBzKDOFlsnAqJ7tZ9v2sTmtI2-HeYjMfKPG-Q/exec'; 
+
         // Start Quiz
         function startBattle(e) {
             e.preventDefault();
@@ -405,7 +413,6 @@
 
             if (!teamName || !teamClass) return;
 
-            // Sequential order from 1 to 25 without randomization
             currentQuestions = [...questionsData];
             studentAnswers = {};
             currentIndex = 0;
@@ -417,17 +424,14 @@
             document.getElementById('view-complete').classList.add('hidden');
             document.getElementById('view-battle').classList.remove('hidden');
 
-            // Update header info safely
             const dtEl = document.getElementById('display-team');
             const dcEl = document.getElementById('display-class');
             if (dtEl) dtEl.innerText = teamName;
             if (dcEl) dcEl.innerText = teamClass;
 
-            // Render first question & palette
             renderQuestion();
             renderPalette();
 
-            // Start 10-minute timer
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
         }
@@ -446,7 +450,6 @@
             const timerEl = document.getElementById('timer-display');
             if (timerEl) timerEl.innerText = displayStr;
 
-            // Warning glow if less than 1 min
             if (timeLeft <= 60) {
                 const box = document.getElementById('timer-box');
                 if (box) box.classList.add('border-pink-500', 'animate-pulse');
@@ -608,14 +611,10 @@
                 answers: detailedAnswers
             };
 
-            // Save locally in browser storage
             let allRecords = JSON.parse(localStorage.getItem('math_battle_records') || '[]');
             allRecords.push(record);
             localStorage.setItem('math_battle_records', JSON.stringify(allRecords));
 
-            // Google Sheets Web App integration
-            // Masukkan URL Web App Google Apps Script anda di sini (cth: 'https://script.google.com/macros/s/.../exec')
-            const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyNgcaGT-s3DB9OKAmiGE3IZdTyJVW9Lr2Bl0hphRjNhavm7y_A3rclwRhjUN81gU5M3Q/exec'; 
             if (googleSheetScriptURL && googleSheetScriptURL.includes('https://script.google.com')) {
                 fetch(googleSheetScriptURL, {
                     method: 'POST',
@@ -656,10 +655,78 @@
             if (pin === "1234") {
                 document.getElementById('teacher-auth-section').classList.add('hidden');
                 document.getElementById('teacher-content-section').classList.remove('hidden');
-                loadTeacherSubmissions();
+                fetchDataFromGoogleSheet();
             } else {
                 document.getElementById('auth-error').classList.remove('hidden');
             }
+        }
+
+        // Robust Google Sheet fetch with CORS Proxy & JSONP fallback
+        function fetchDataFromGoogleSheet() {
+            if (!googleSheetScriptURL || !googleSheetScriptURL.includes('https://script.google.com')) {
+                loadTeacherSubmissions();
+                return;
+            }
+
+            const tbody = document.getElementById('submissions-table-body');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-cyan-400 italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuatkan data terkini dari Google Sheet...</td></tr>`;
+            }
+
+            window.processCloudData = function(rows) {
+                if (Array.isArray(rows) && rows.length > 0) {
+                    let cloudRecords = rows.map((row, idx) => {
+                        let answersObj = {};
+                        for (let q = 1; q <= 25; q++) {
+                            let ansIndex = 5 + (q - 1) * 2;
+                            let statIndex = 6 + (q - 1) * 2;
+                            answersObj[q] = {
+                                questionId: q,
+                                studentAnswer: row[ansIndex] || "",
+                                correctKeys: "",
+                                isCorrect: (row[statIndex] === "BETUL")
+                            };
+                        }
+                        return {
+                            id: 'cloud_' + idx,
+                            date: row[0] || new Date().toLocaleString(),
+                            teamName: row[1] || "Tanpa Nama",
+                            teamClass: row[2] || "-",
+                            correctCount: parseInt(row[3]) || 0,
+                            score: parseInt(row[4]) || 0,
+                            answers: answersObj
+                        };
+                    });
+
+                    localStorage.setItem('math_battle_records', JSON.stringify(cloudRecords));
+                    loadTeacherSubmissions();
+                } else {
+                    console.warn("Tiada data dijumpai di Google Sheet, menggunakan localStorage.");
+                    loadTeacherSubmissions();
+                }
+            };
+
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(googleSheetScriptURL)}`;
+            fetch(proxyUrl)
+                .then(response => response.json())
+                .then(data => {
+                    window.processCloudData(data);
+                })
+                .catch(err => {
+                    console.warn("CORS Proxy gagal, mencuba kaedah JSONP...", err);
+                    window.handleGoogleSheetData = function(data) {
+                        window.processCloudData(data);
+                    };
+
+                    const script = document.createElement('script');
+                    script.src = `${googleSheetScriptURL}?callback=handleGoogleSheetData`;
+                    script.onerror = function() {
+                        console.warn("Gagal memuatkan melalui JSONP, memaparkan data tempatan.");
+                        loadTeacherSubmissions();
+                    };
+                    document.body.appendChild(script);
+                    setTimeout(() => script.remove(), 6000);
+                });
         }
 
         function loadTeacherSubmissions() {
