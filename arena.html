@@ -379,7 +379,7 @@
         // =========================================================================
         // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
         // =========================================================================
-        const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyuhfuaDPEeRp9RAkEy5qf52eIYy86LLaBzKDOFlsnAqJ7tZ9v2sTmtI2-HeYjMfKPG-Q/exec'; 
+        const googleSheetScriptURL = 'MASUKKAN_WEB_APP_URL_ANDA_DI_SINI'; 
 
         // Start Quiz
         function startBattle(e) {
@@ -638,15 +638,15 @@
             if (pin === "1234") {
                 document.getElementById('teacher-auth-section').classList.add('hidden');
                 document.getElementById('teacher-content-section').classList.remove('hidden');
-                loadTeacherSubmissions();
+                fetchDataFromGoogleSheet();
             } else {
                 document.getElementById('auth-error').classList.remove('hidden');
             }
         }
 
-        // Fungsi bypass CORS untuk mengambil data dari Google Sheet menggunakan JSONP script tag
+        // Fungsi ampuh mengambil data dari Google Sheet (menyokong CORS Proxy & JSONP fallback)
         function fetchDataFromGoogleSheet() {
-            const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyNgcaGT-s3DB9OKAmiGE3IZdTyJVW9Lr2Bl0hphRjNhavm7y_A3rclwRhjUN81gU5M3Q/exec';
+            const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyuhfuaDPEeRp9RAkEy5qf52eIYy86LLaBzKDOFlsnAqJ7tZ9v2sTmtI2-HeYjMfKPG-Q/exec';
             if (!googleSheetScriptURL || !googleSheetScriptURL.includes('https://script.google.com')) {
                 loadTeacherSubmissions();
                 return;
@@ -657,10 +657,10 @@
                 tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-cyan-400 italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuatkan data terkini dari Google Sheet...</td></tr>`;
             }
 
-            // Gunakan kaedah JSONP untuk elakkan sekatan CORS dasar pelayar GitHub Pages
-            window.handleGoogleSheetData = function(data) {
-                if (Array.isArray(data) && data.length > 0) {
-                    let cloudRecords = data.map((row, idx) => {
+            // Fungsi pemprosesan data rows yang diterima
+            window.processCloudData = function(rows) {
+                if (Array.isArray(rows) && rows.length > 0) {
+                    let cloudRecords = rows.map((row, idx) => {
                         let answersObj = {};
                         for (let q = 1; q <= 25; q++) {
                             let ansIndex = 5 + (q - 1) * 2;
@@ -686,19 +686,34 @@
                     localStorage.setItem('math_battle_records', JSON.stringify(cloudRecords));
                     loadTeacherSubmissions();
                 } else {
+                    console.warn("Tiada data dijumpai di Google Sheet, menggunakan localStorage.");
                     loadTeacherSubmissions();
                 }
             };
 
-            // Buat elemen script dinamik untuk memanggil endpoint doGet Apps Script dengan callback
-            const script = document.createElement('script');
-            script.src = `${googleSheetScriptURL}?callback=handleGoogleSheetData`;
-            script.onerror = function() {
-                console.warn("Gagal memuatkan dari Google Sheet, menggunakan data tempatan (localStorage).");
-                loadTeacherSubmissions();
-            };
-            document.body.appendChild(script);
-            setTimeout(() => script.remove(), 5000);
+            // Cuba kaedah fetch terus melalui CORS Proxy luaran yang stabil
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(googleSheetScriptURL)}`;
+            fetch(proxyUrl)
+                .then(response => response.json())
+                .then(data => {
+                    window.processCloudData(data);
+                })
+                .catch(err => {
+                    console.warn("CORS Proxy gagal, mencuba kaedah JSONP...", err);
+                    // Fallback ke kaedah JSONP Script Tag
+                    window.handleGoogleSheetData = function(data) {
+                        window.processCloudData(data);
+                    };
+
+                    const script = document.createElement('script');
+                    script.src = `${googleSheetScriptURL}?callback=handleGoogleSheetData`;
+                    script.onerror = function() {
+                        console.warn("Gagal memuatkan melalui JSONP, memaparkan data tempatan.");
+                        loadTeacherSubmissions();
+                    };
+                    document.body.appendChild(script);
+                    setTimeout(() => script.remove(), 6000);
+                });
         }
 
         function loadTeacherSubmissions() {
