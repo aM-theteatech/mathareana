@@ -706,6 +706,18 @@
                 loadTeacherSubmissions();
             }
         }
+
+        // Tambah URL Web App Google Script anda di sini:
+const scriptURL = 'https://script.google.com/macros/s/AKfycbwBKQMDH8DrqqGHUBh8rJYwqg11_PuorXzB9M0d8PwXcnUJAIyeAVPumvQyXylWjKkCWQ/exec';
+
+fetch(scriptURL, { 
+    method: 'POST', 
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record)
+})
+.then(() => console.log('Berjaya hantar ke Google Sheet'))
+.catch(error => console.error('Ralat!', error.message));
     </script>
 </body>
 </html>
