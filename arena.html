@@ -379,7 +379,7 @@
         // =========================================================================
         // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
         // =========================================================================
-        const googleSheetScriptURL = 'MASUKKAN_WEB_APP_URL_ANDA_DI_SINI'; 
+        const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyNgcaGT-s3DB9OKAmiGE3IZdTyJVW9Lr2Bl0hphRjNhavm7y_A3rclwRhjUN81gU5M3Q/exec'; 
 
         // Start Quiz
         function startBattle(e) {
@@ -639,15 +639,12 @@
                 document.getElementById('teacher-auth-section').classList.add('hidden');
                 document.getElementById('teacher-content-section').classList.remove('hidden');
                 loadTeacherSubmissions();
-                
-                // Automatik sync data dari Google Sheet apabila guru berjaya log masuk
-                fetchDataFromGoogleSheet();
             } else {
                 document.getElementById('auth-error').classList.remove('hidden');
             }
         }
 
-        // Fungsi baru untuk retrieve (tarik) data daripada Google Sheet menggunakan GET request
+        // Fungsi bypass CORS untuk mengambil data dari Google Sheet menggunakan JSONP script tag
         function fetchDataFromGoogleSheet() {
             const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyNgcaGT-s3DB9OKAmiGE3IZdTyJVW9Lr2Bl0hphRjNhavm7y_A3rclwRhjUN81gU5M3Q/exec';
             if (!googleSheetScriptURL || !googleSheetScriptURL.includes('https://script.google.com')) {
@@ -660,48 +657,48 @@
                 tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-cyan-400 italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuatkan data terkini dari Google Sheet...</td></tr>`;
             }
 
-            // Gunakan mode: 'cors' dengan catch untuk menangani sekatan CORS Apps Script
-            fetch(googleSheetScriptURL, { method: 'GET', mode: 'cors' })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (Array.isArray(data) && data.length > 0) {
-                        let cloudRecords = data.map((row, idx) => {
-                            let answersObj = {};
-                            for (let q = 1; q <= 25; q++) {
-                                let ansIndex = 5 + (q - 1) * 2;
-                                let statIndex = 6 + (q - 1) * 2;
-                                answersObj[q] = {
-                                    questionId: q,
-                                    studentAnswer: row[ansIndex] || "",
-                                    correctKeys: "",
-                                    isCorrect: (row[statIndex] === "BETUL")
-                                };
-                            }
-                            return {
-                                id: 'cloud_' + idx,
-                                date: row[0] || new Date().toLocaleString(),
-                                teamName: row[1] || "Tanpa Nama",
-                                teamClass: row[2] || "-",
-                                correctCount: parseInt(row[3]) || 0,
-                                score: parseInt(row[4]) || 0,
-                                answers: answersObj
+            // Gunakan kaedah JSONP untuk elakkan sekatan CORS dasar pelayar GitHub Pages
+            window.handleGoogleSheetData = function(data) {
+                if (Array.isArray(data) && data.length > 0) {
+                    let cloudRecords = data.map((row, idx) => {
+                        let answersObj = {};
+                        for (let q = 1; q <= 25; q++) {
+                            let ansIndex = 5 + (q - 1) * 2;
+                            let statIndex = 6 + (q - 1) * 2;
+                            answersObj[q] = {
+                                questionId: q,
+                                studentAnswer: row[ansIndex] || "",
+                                correctKeys: "",
+                                isCorrect: (row[statIndex] === "BETUL")
                             };
-                        });
+                        }
+                        return {
+                            id: 'cloud_' + idx,
+                            date: row[0] || new Date().toLocaleString(),
+                            teamName: row[1] || "Tanpa Nama",
+                            teamClass: row[2] || "-",
+                            correctCount: parseInt(row[3]) || 0,
+                            score: parseInt(row[4]) || 0,
+                            answers: answersObj
+                        };
+                    });
 
-                        localStorage.setItem('math_battle_records', JSON.stringify(cloudRecords));
-                        loadTeacherSubmissions();
-                    } else {
-                        loadTeacherSubmissions();
-                    }
-                })
-                .catch(err => {
-                    console.warn("CORS/Network restriction detected from browser. Memuatkan data sandaran tempatan (localStorage)...", err);
-                    // Fallback ke localStorage jika CORS browser menyekat direct GET dari client-side
+                    localStorage.setItem('math_battle_records', JSON.stringify(cloudRecords));
                     loadTeacherSubmissions();
-                });
+                } else {
+                    loadTeacherSubmissions();
+                }
+            };
+
+            // Buat elemen script dinamik untuk memanggil endpoint doGet Apps Script dengan callback
+            const script = document.createElement('script');
+            script.src = `${googleSheetScriptURL}?callback=handleGoogleSheetData`;
+            script.onerror = function() {
+                console.warn("Gagal memuatkan dari Google Sheet, menggunakan data tempatan (localStorage).");
+                loadTeacherSubmissions();
+            };
+            document.body.appendChild(script);
+            setTimeout(() => script.remove(), 5000);
         }
 
         function loadTeacherSubmissions() {
