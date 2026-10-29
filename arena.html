@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station 5 - Math Battle Arena</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        arenaDark: '#070a13',
+                        arenaCard: '#0f172a',
+                        neonCyan: '#00f2fe',
+                        neonPurple: '#7f00ff',
+                        neonPink: '#ff007f',
+                        neonGreen: '#00ffcc',
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 20px rgba(0, 242, 254, 0.4)',
+                        'neon-pink': '0 0 20px rgba(255, 0, 127, 0.4)',
+                        'neon-purple': '0 0 20px rgba(127, 0, 255, 0.4)',
+                        'neon-green': '0 0 20px rgba(0, 255, 204, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Orbitron & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #070a13;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070a13;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        .grid-bg {
+            background-image: linear-gradient(to right, rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+            background-size: 35px 35px;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.9; }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen grid-bg flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <!-- Top Navigation / Header -->
+    <header class="w-full border-b border-cyan-500/20 bg-arenaDark/90 backdrop-blur-md sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 via-purple-600 to-pink-500 flex items-center justify-center shadow-neon-cyan">
+                <i class="fa-solid fa-gamepad text-black font-extrabold text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-orbitron font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 text-base md:text-xl tracking-wider">MATH BATTLE ARENA</h1>
+                <p class="text-[10px] sm:text-xs text-cyan-300/70 tracking-widest uppercase">Station 5 &bull; Elite Explorace</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="openTeacherModal()" class="px-3 py-1.5 rounded-lg border border-purple-500/40 bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 text-xs font-orbitron transition duration-200 flex items-center space-x-2 shadow-neon-purple">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="hidden sm:inline">Portal Guru</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 my-auto">
+
+        <!-- VIEW 1: REGISTRATION FORM -->
+        <div id="view-welcome" class="w-full max-w-xl bg-arenaCard/95 border border-cyan-500/30 rounded-2xl p-6 sm:p-8 shadow-neon-cyan backdrop-blur-xl relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="text-center mb-6">
+                <div class="inline-block p-3 bg-cyan-500/10 border border-cyan-500/40 rounded-full mb-3 shadow-neon-cyan">
+                    <i class="fa-solid fa-robot text-cyan-400 text-3xl"></i>
+                </div>
+                <h2 class="font-orbitron text-2xl sm:text-3xl font-extrabold text-white mb-2">MASUKKAN MEDAN</h2>
+                <p class="text-gray-300 text-xs sm:text-sm">Sediakan kumpulan anda untuk menempuh 25 cabaran matematik dalam masa 10 minit!</p>
+            </div>
+
+            <form id="form-register" onsubmit="startBattle(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-orbitron uppercase tracking-wider text-cyan-300 mb-1.5"><i class="fa-solid fa-users mr-1"></i> Nama Kumpulan (Team Name) *</label>
+                    <input type="text" id="team-name" required placeholder="Contoh: Cyber Math Squad..." class="w-full bg-arenaDark border border-cyan-500/30 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-sm transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-orbitron uppercase tracking-wider text-cyan-300 mb-1.5"><i class="fa-solid fa-school mr-1"></i> Tingkatan / Kelas (Class) *</label>
+                    <input type="text" id="team-class" required placeholder="Contoh: Tahun 6 / 6 Bestari / Tingkatan 2..." class="w-full bg-arenaDark border border-cyan-500/30 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-sm transition">
+                </div>
+
+                <div class="bg-arenaDark/80 border border-purple-500/30 rounded-xl p-4 text-xs text-gray-300 space-y-2">
+                    <div class="flex items-center space-x-2 text-purple-300 font-semibold font-orbitron">
+                        <i class="fa-solid fa-bolt text-purple-400"></i>
+                        <span>MAKLUMAT PERMAINAN:</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-gray-400 pl-1">
+                        <li>25 Soalan dalam bentuk kad imej rasmi (Susunan Rawak).</li>
+                        <li>Pemasa automatik 10 minit bermula serta-merta selepas butang MULA ditekan.</li>
+                        <li>4 markah untuk setiap jawapan betul (Maksimum 100 markah).</li>
+                        <li>Semua jawapan disimpan automatik semasa anda menaip. Anda boleh ubah jawapan bila-bila masa.</li>
+                        <li>Tekan butang <b>HANTAR SEMUA JAWAPAN</b> di bawah palet soalan apabila siap.</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-black font-orbitron font-extrabold rounded-xl shadow-neon-pink tracking-wider transition duration-200 transform hover:-translate-y-0.5 text-base">
+                    MULA PERTARUNGAN <i class="fa-solid fa-rocket ml-2"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- VIEW 2: BATTLE ARENA (QUESTIONS) -->
+        <div id="view-battle" class="w-full max-w-4xl hidden bg-arenaCard/95 border border-cyan-500/30 rounded-2xl p-4 sm:p-6 shadow-neon-cyan backdrop-blur-xl">
+            
+            <!-- Top HUD Bar -->
+            <div class="flex flex-col sm:flex-row items-center justify-between pb-4 mb-4 border-b border-cyan-500/20 gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/40 rounded-lg text-cyan-300 font-orbitron text-xs">
+                        <i class="fa-solid fa-shield mr-1"></i> <span id="display-team">Kumpulan</span> (<span id="display-class">Kelas</span>)
+                    </div>
+                    <div class="px-3 py-1 bg-purple-500/10 border border-purple-500/40 rounded-lg text-purple-300 font-orbitron text-xs">
+                        Soalan <span id="current-q-num">1</span> / 25
+                    </div>
+                </div>
+                
+                <!-- Timer Display -->
+                <div id="timer-box" class="flex items-center space-x-2 px-4 py-1.5 bg-arenaDark border border-cyan-500/40 rounded-xl shadow-neon-cyan font-orbitron text-cyan-400 font-bold text-sm">
+                    <i class="fa-solid fa-stopwatch animate-pulse"></i>
+                    <span id="timer-display">10:00</span>
+                </div>
+            </div>
+
+            <!-- Question Card Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <!-- Left: Question Image Display -->
+                <div class="lg:col-span-8 bg-arenaDark border border-cyan-500/20 rounded-xl p-3 flex items-center justify-center relative group overflow-hidden min-h-[300px] sm:min-h-[380px]">
+                    <img id="question-image" src="" alt="Soalan Matematik" class="max-h-[400px] w-auto object-contain rounded-lg shadow-md transition duration-300" onerror="this.src='https://placehold.co/800x600/0f172a/00f2fe?text=Soalan+Math+Battle+Arena'">
+                </div>
+
+                <!-- Right: Answer Input Form -->
+                <div class="lg:col-span-4 flex flex-col justify-between space-y-4 bg-arenaDark/60 border border-purple-500/20 rounded-xl p-4 sm:p-5">
+                    <div>
+                        <h3 class="font-orbitron font-bold text-white text-sm mb-1">JAWAPAN KUMPULAN</h3>
+                        <p class="text-xs text-gray-400 mb-4">Taip jawapan anda di bawah. Jawapan disimpan automatik.</p>
+                        
+                        <div class="space-y-2">
+                            <label class="block text-[11px] font-orbitron uppercase tracking-wider text-cyan-300">Masukkan Jawapan:</label>
+                            <input type="text" id="answer-input" oninput="saveCurrentAnswer(this.value)" placeholder="Contoh: 10, A, 3:04..." class="w-full bg-arenaDark border border-cyan-500/40 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-sm font-semibold transition">
+                        </div>
+                    </div>
+
+                    <!-- Navigation Controls -->
+                    <div class="space-y-3 pt-4 border-t border-cyan-500/10">
+                        <div class="flex space-x-2">
+                            <button onclick="prevQuestion()" class="flex-1 py-3 bg-arenaDark hover:bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 rounded-xl font-orbitron text-xs transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-arrow-left"></i> <span>Sebelum</span>
+                            </button>
+                            <button onclick="nextQuestion()" class="flex-1 py-3 bg-arenaDark hover:bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 rounded-xl font-orbitron text-xs transition flex items-center justify-center space-x-1">
+                                <span>Seterusnya</span> <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Palette & Final Actions Section -->
+            <div class="mt-6 pt-4 border-t border-cyan-500/20 space-y-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <span class="text-xs font-orbitron text-gray-400 tracking-wider">PALET SOALAN (Pilih nombor untuk lompat):</span>
+                    <span class="text-[10px] text-cyan-300"><i class="fa-solid fa-circle text-cyan-400 text-[8px] mr-1"></i> Dijawab &bull; <span class="text-gray-500"><i class="fa-solid fa-circle text-gray-600 text-[8px] mr-1"></i> Belum</span></span>
+                </div>
+                
+                <div id="question-palette" class="grid grid-cols-5 sm:grid-cols-9 md:grid-cols-13 gap-1.5 sm:gap-2">
+                    <!-- Dynamic Palette Buttons -->
+                </div>
+
+                <!-- Bottom Bar: Hint Button & Final Submission Button -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                    <button onclick="showHintModal()" class="w-full sm:w-auto px-4 py-3 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-500/40 text-purple-300 rounded-xl font-orbitron text-xs transition flex items-center justify-center space-x-2 shadow-neon-purple">
+                        <i class="fa-solid fa-lightbulb text-yellow-400"></i>
+                        <span>BANTUAN / HINT SOALAN INI</span>
+                    </button>
+
+                    <button onclick="confirmSubmit()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-pink-600 via-purple-600 to-cyan-500 hover:from-pink-500 hover:to-cyan-400 text-white font-orbitron font-extrabold rounded-xl shadow-neon-pink tracking-wider transition text-xs sm:text-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>HANTAR SEMUA JAWAPAN</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: COMPLETION SCREEN (SECRET SCORE) -->
+        <div id="view-complete" class="w-full max-w-md hidden bg-arenaCard/95 border border-cyan-500/30 rounded-2xl p-6 sm:p-8 text-center shadow-neon-cyan backdrop-blur-xl">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-cyan-500 text-black rounded-full flex items-center justify-center mx-auto mb-4 shadow-neon-green text-2xl font-bold">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h2 class="font-orbitron text-2xl sm:text-3xl font-extrabold text-white mb-2">MISI SELESAI!</h2>
+            <p id="complete-team-name" class="text-cyan-300 font-orbitron text-sm mb-4">Kumpulan: Cyber Squad</p>
+            <div class="bg-arenaDark border border-cyan-500/30 rounded-xl p-4 text-xs text-gray-300 mb-6 space-y-2">
+                <p class="text-green-400 font-semibold"><i class="fa-solid fa-lock mr-1"></i> Semua jawapan telah direkodkan dengan jayanya.</p>
+                <p class="text-gray-400">Markah rasmi dirahsiakan daripada paparan skrin dan hanya boleh disemak oleh guru melalui Portal Guru.</p>
+            </div>
+            <button onclick="resetApp()" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-black font-orbitron font-extrabold rounded-xl shadow-neon-cyan text-sm transition">
+                KEMBALI KE MENU UTAMA <i class="fa-solid fa-rotate-right ml-1"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-3 text-[11px] text-gray-500 font-orbitron border-t border-cyan-500/10">
+        MATH BATTLE ARENA &bull; STATION 5 ELITE EXPLORACE
+    </footer>
+
+    <!-- CONFIRM SUBMISSION MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-arenaCard border border-cyan-500/40 rounded-2xl max-w-md w-full p-6 shadow-neon-cyan text-center">
+            <div class="text-yellow-400 text-3xl mb-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="font-orbitron font-bold text-white text-lg mb-2">SAHKAN PENGHANTARAN?</h3>
+            <p class="text-xs text-gray-300 mb-6">Adakah anda pasti ingin menghantar semua jawapan sekarang? Anda tidak boleh kembali mengubah jawapan selepas dihantar.</p>
+            <div class="flex space-x-3">
+                <button onclick="closeConfirmModal()" class="flex-1 py-2.5 bg-arenaDark border border-gray-600 text-gray-300 rounded-xl font-orbitron text-xs hover:bg-gray-800 transition">KEMBALI</button>
+                <button onclick="submitQuizFinal()" class="flex-1 py-2.5 bg-gradient-to-r from-cyan-500 to-green-500 text-black font-orbitron font-extrabold rounded-xl text-xs shadow-neon-cyan transition">YA, HANTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HINT MODAL -->
+    <div id="hint-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-arenaCard border border-purple-500/40 rounded-2xl max-w-md w-full p-6 shadow-neon-purple">
+            <div class="flex items-center justify-between mb-3 border-b border-purple-500/20 pb-2">
+                <h3 class="font-orbitron font-bold text-purple-300 text-sm flex items-center">
+                    <i class="fa-solid fa-lightbulb text-yellow-400 mr-2"></i> BANTUAN / HINT SOALAN <span id="hint-q-label" class="ml-1 text-white">1</span>
+                </h3>
+                <button onclick="closeHintModal()" class="text-gray-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="hint-text-content" class="text-xs text-gray-300 leading-relaxed mb-5">Panduan penyelesaian akan dipaparkan di sini.</p>
+            <button onclick="closeHintModal()" class="w-full py-2.5 bg-purple-900/60 hover:bg-purple-800/80 border border-purple-500/40 text-purple-200 rounded-xl font-orbitron text-xs transition">TUTUP</button>
+        </div>
+    </div>
+
+    <!-- TEACHER DASHBOARD MODAL -->
+    <div id="teacher-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-arenaCard border border-purple-500/40 rounded-2xl max-w-4xl w-full p-6 shadow-neon-purple my-auto relative">
+            <button onclick="closeTeacherModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-400 text-lg shadow-neon-purple">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h3 class="font-orbitron font-extrabold text-white text-lg">PORTAL GURU & DASHBOARD</h3>
+                    <p class="text-xs text-purple-300/70">Semakan markah rahsia & senarai kumpulan</p>
+                </div>
+            </div>
+
+            <!-- PIN Auth Section -->
+            <div id="teacher-auth-section" class="max-w-sm mx-auto py-8 text-center space-y-4">
+                <p class="text-xs text-gray-300 font-orbitron">Sila masukkan PIN Keselamatan Guru (Default: 1234):</p>
+                <input type="password" id="teacher-pin-input" placeholder="Masukkan PIN..." class="w-full bg-arenaDark border border-purple-500/40 rounded-xl px-4 py-3 text-center text-white text-lg tracking-widest focus:outline-none focus:border-purple-400">
+                <p id="auth-error" class="text-xs text-pink-500 hidden">PIN tidak sah! Sila cuba lagi.</p>
+                <button onclick="verifyTeacherPin()" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-orbitron font-bold rounded-xl shadow-neon-purple text-xs transition">LOG MASUK GURU</button>
+            </div>
+
+            <!-- TEACHER CONTENT SECTION -->
+            <div id="teacher-content-section" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center space-x-2">
+                        <div id="total-submissions-count" class="text-xs font-orbitron text-purple-300">Jumlah Kumpulan: 0</div>
+                        <button onclick="fetchDataFromGoogleSheet()" class="px-2.5 py-1 bg-cyan-600/20 border border-cyan-500/40 hover:bg-cyan-600/40 text-cyan-300 rounded-lg text-xs font-orbitron transition flex items-center space-x-1">
+                            <i class="fa-solid fa-rotate mr-1"></i> <span>Sync Google Sheet</span>
+                        </button>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="exportToCSV()" class="px-3 py-1.5 bg-green-600/20 border border-green-500/40 hover:bg-green-600/40 text-green-300 rounded-lg text-xs font-orbitron transition"><i class="fa-solid fa-file-excel mr-1"></i> Eksport Laporan Penuh (CSV)</button>
+                        <button onclick="clearAllData()" class="px-3 py-1.5 bg-pink-600/20 border border-pink-500/40 hover:bg-pink-600/40 text-pink-300 rounded-lg text-xs font-orbitron transition"><i class="fa-solid fa-trash mr-1"></i> Padam Rekod</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-purple-500/20 rounded-xl">
+                    <table class="w-full text-left text-xs text-gray-300">
+                        <thead class="bg-arenaDark text-purple-300 font-orbitron border-b border-purple-500/20">
+                            <tr>
+                                <th class="p-3">Tarikh / Masa</th>
+                                <th class="p-3">Nama Kumpulan</th>
+                                <th class="p-3">Kelas</th>
+                                <th class="p-3 text-center">Betul / 25</th>
+                                <th class="p-3 text-right">Markah (Max 100)</th>
+                                <th class="p-3 text-center">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="submissions-table-body" class="divide-y divide-purple-500/10">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEACHER DETAIL VIEW MODAL FOR 25 Qs -->
+    <div id="teacher-detail-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-arenaCard border border-cyan-500/40 rounded-2xl max-w-4xl w-full p-6 shadow-neon-cyan my-auto relative">
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-cyan-600/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg shadow-neon-cyan">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div>
+                    <h3 id="detail-team-title" class="font-orbitron font-extrabold text-white text-base">Semakan Jawapan Kumpulan</h3>
+                    <p id="detail-team-meta" class="text-xs text-cyan-300/70">Kelas &bull; Tarikh</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto border border-cyan-500/20 rounded-xl max-h-[400px] mb-4">
+                <table class="w-full text-left text-xs text-gray-300">
+                    <thead class="bg-arenaDark text-cyan-300 font-orbitron border-b border-cyan-500/20 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-2.5 text-center">No. Soalan</th>
+                            <th class="p-2.5">Jawapan Kumpulan</th>
+                            <th class="p-2.5">Kunci Jawapan Rasmi</th>
+                            <th class="p-2.5 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-table-body" class="divide-y divide-cyan-500/10">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button onclick="closeDetailModal()" class="w-full py-2.5 bg-arenaDark border border-cyan-500/40 text-cyan-300 rounded-xl font-orbitron text-xs hover:bg-cyan-950/40 transition">TUTUP</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        // Official 25 Questions mapping with exact format img/Qs{id}.jpg / .png
+        const questionsData = [
+            // ... existing questionsData array ...
+        ];
+
+        // State variables
+        let teamName = "";
+        let teamClass = "";
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let studentAnswers = {}; // index (0-24) -> answer string
+        let timerInterval = null;
+        
+        // =========================================================================
+        // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        // =========================================================================
+        const googleSheetScriptURL = 'MASUKKAN_WEB_APP_URL_ANDA_DI_SINI'; 
+
+        // Start Quiz
+        function startBattle(e) {
+            e.preventDefault();
+            teamName = document.getElementById('team-name').value.trim();
+            teamClass = document.getElementById('team-class').value.trim();
+
+            if (!teamName || !teamClass) return;
+
+            // Sequential order from 1 to 25 without randomization
+            currentQuestions = [...questionsData];
+            studentAnswers = {};
+            currentIndex = 0;
+            timeLeft = 600;
+            isSubmitted = false;
+
+            // Switch views
+            document.getElementById('view-welcome').classList.add('hidden');
+            document.getElementById('view-complete').classList.add('hidden');
+            document.getElementById('view-battle').classList.remove('hidden');
+
+            // Update header info safely
+            const dtEl = document.getElementById('display-team');
+            const dcEl = document.getElementById('display-class');
+            if (dtEl) dtEl.innerText = teamName;
+            if (dcEl) dcEl.innerText = teamClass;
+
+            // Render first question & palette
+            renderQuestion();
+            renderPalette();
+
+            // Start 10-minute timer
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // Timer function
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                autoSubmitQuiz();
+                return;
+            }
+            timeLeft--;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            const displayStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            const timerEl = document.getElementById('timer-display');
+            if (timerEl) timerEl.innerText = displayStr;
+
+            // Warning glow if less than 1 min
+            if (timeLeft <= 60) {
+                const box = document.getElementById('timer-box');
+                if (box) box.classList.add('border-pink-500', 'animate-pulse');
+            }
+        }
+
+        // Render current question
+        function renderQuestion() {
+            const qNumEl = document.getElementById('current-q-num');
+            if (qNumEl) qNumEl.innerText = (currentIndex + 1);
+
+            const qObj = currentQuestions[currentIndex];
+            const imgEl = document.getElementById('question-image');
+            if (imgEl) imgEl.src = qObj.img;
+
+            const inputEl = document.getElementById('answer-input');
+            if (inputEl) {
+                inputEl.value = studentAnswers[currentIndex] || "";
+                inputEl.focus();
+            }
+
+            updatePaletteUI();
+        }
+
+        // Save answer on input
+        function saveCurrentAnswer(val) {
+            studentAnswers[currentIndex] = val;
+            updatePaletteUI();
+        }
+
+        // Navigation
+        function nextQuestion() {
+            if (currentIndex < currentQuestions.length - 1) {
+                currentIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderQuestion();
+            }
+        }
+
+        function jumpToQuestion(idx) {
+            currentIndex = idx;
+            renderQuestion();
+        }
+
+        // Palette UI
+        function renderPalette() {
+            const paletteEl = document.getElementById('question-palette');
+            if (!paletteEl) return;
+            paletteEl.innerHTML = "";
+
+            for (let i = 0; i < 25; i++) {
+                const btn = document.createElement('button');
+                btn.id = `palette-btn-${i}`;
+                btn.className = "w-full py-2 rounded-lg font-orbitron text-xs font-bold border transition flex items-center justify-center bg-arenaDark border-cyan-500/30 text-cyan-300 hover:border-cyan-400";
+                btn.innerText = (i + 1);
+                btn.onclick = () => jumpToQuestion(i);
+                paletteEl.appendChild(btn);
+            }
+            updatePaletteUI();
+        }
+
+        function updatePaletteUI() {
+            for (let i = 0; i < 25; i++) {
+                const btn = document.getElementById(`palette-btn-${i}`);
+                if (!btn) continue;
+
+                const isAnswered = studentAnswers[i] && studentAnswers[i].trim() !== "";
+                const isCurrent = i === currentIndex;
+
+                if (isCurrent) {
+                    btn.className = "w-full py-2 rounded-lg font-orbitron text-xs font-bold border transition flex items-center justify-center bg-cyan-500 text-black border-cyan-300 shadow-neon-cyan scale-105";
+                } else if (isAnswered) {
+                    btn.className = "w-full py-2 rounded-lg font-orbitron text-xs font-bold border transition flex items-center justify-center bg-purple-900/60 border-purple-500 text-purple-200";
+                } else {
+                    btn.className = "w-full py-2 rounded-lg font-orbitron text-xs font-bold border transition flex items-center justify-center bg-arenaDark border-cyan-500/30 text-gray-400 hover:text-cyan-300";
+                }
+            }
+        }
+
+        // Hint Modal Logic
+        function showHintModal() {
+            const currentQ = currentQuestions[currentIndex];
+            document.getElementById('hint-q-label').innerText = (currentIndex + 1);
+            document.getElementById('hint-text-content').innerText = currentQ.hint || "Tiada pembayang khusus untuk soalan ini. Fahami kehendak soalan dengan teliti.";
+            document.getElementById('hint-modal').classList.remove('hidden');
+        }
+
+        function closeHintModal() {
+            document.getElementById('hint-modal').classList.add('hidden');
+        }
+
+        // Submission handling
+        function confirmSubmit() {
+            const inputEl = document.getElementById('answer-input');
+            if (inputEl) {
+                studentAnswers[currentIndex] = inputEl.value;
+            }
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        function autoSubmitQuiz() {
+            if (isSubmitted) return;
+            submitQuizFinal();
+        }
+
+        function submitQuizFinal() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            if (timerInterval) clearInterval(timerInterval);
+            closeConfirmModal();
+
+            const inputEl = document.getElementById('answer-input');
+            if (inputEl) {
+                studentAnswers[currentIndex] = inputEl.value;
+            }
+
+            let correctCount = 0;
+            let detailedAnswers = {};
+
+            for (let i = 0; i < 25; i++) {
+                const qObj = currentQuestions[i];
+                const userAns = (studentAnswers[i] || "").trim();
+                const userAnsLower = userAns.toLowerCase();
+                
+                let isCorrect = qObj.keys.some(k => {
+                    const keyClean = k.toLowerCase().trim();
+                    return userAnsLower === keyClean || (userAnsLower !== "" && keyClean.includes(userAnsLower));
+                });
+
+                if (isCorrect) correctCount++;
+
+                detailedAnswers[qObj.id] = {
+                    questionId: qObj.id,
+                    studentAnswer: userAns === "" ? "(Tiada Jawapan)" : userAns,
+                    correctKeys: qObj.keys.join(" / "),
+                    isCorrect: isCorrect
+                };
+            }
+
+            const totalScore = correctCount * 4;
+
+            const record = {
+                id: 'team_' + Date.now(),
+                date: new Date().toLocaleString(),
+                teamName: teamName,
+                teamClass: teamClass,
+                correctCount: correctCount,
+                score: totalScore,
+                answers: detailedAnswers
+            };
+
+            // Simpan dalam localStorage pelayar
+            let allRecords = JSON.parse(localStorage.getItem('math_battle_records') || '[]');
+            allRecords.push(record);
+            localStorage.setItem('math_battle_records', JSON.stringify(allRecords));
+
+            // Hantar data secara automatik ke Google Sheets (POST)
+            if (googleSheetScriptURL && googleSheetScriptURL.includes('https://script.google.com')) {
+                fetch(googleSheetScriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(record)
+                }).catch(err => console.error("Google Sheet Sync Error:", err));
+            }
+
+            document.getElementById('view-battle').classList.add('hidden');
+            const completeTeamEl = document.getElementById('complete-team-name');
+            if (completeTeamEl) completeTeamEl.innerText = `Kumpulan: ${teamName} (${teamClass})`;
+            document.getElementById('view-complete').classList.remove('hidden');
+        }
+
+        function resetApp() {
+            document.getElementById('view-complete').classList.add('hidden');
+            document.getElementById('view-welcome').classList.remove('hidden');
+            const formReg = document.getElementById('form-register');
+            if (formReg) formReg.reset();
+        }
+
+        // Teacher Dashboard Modal Logic
+        function openTeacherModal() {
+            document.getElementById('teacher-modal').classList.remove('hidden');
+            const pinInput = document.getElementById('teacher-pin-input');
+            if (pinInput) pinInput.value = "";
+            const authErr = document.getElementById('auth-error');
+            if (authErr) authErr.classList.add('hidden');
+            const authSec = document.getElementById('teacher-auth-section');
+            if (authSec) authSec.classList.remove('hidden');
+            const contentSec = document.getElementById('teacher-content-section');
+            if (contentSec) contentSec.classList.add('hidden');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacher-modal').classList.add('hidden');
+        }
+
+        function verifyTeacherPin() {
+            const pin = document.getElementById('teacher-pin-input').value.trim();
+            if (pin === "1234") {
+                document.getElementById('teacher-auth-section').classList.add('hidden');
+                document.getElementById('teacher-content-section').classList.remove('hidden');
+                loadTeacherSubmissions();
+                
+                // Tarik data terus dari Google Sheet apabila guru log masuk
+                if (googleSheetScriptURL && googleSheetScriptURL.includes('https://script.google.com')) {
+                    fetchDataFromGoogleSheet();
+                }
+            } else {
+                document.getElementById('auth-error').classList.remove('hidden');
+            }
+        }
+
+        // Fungsi baru untuk retrieve data daripada Google Sheet (GET)
+        function fetchDataFromGoogleSheet() {
+            if (!googleSheetScriptURL || !googleSheetScriptURL.includes('https://script.google.com')) {
+                return;
+            }
+            
+            const tbody = document.getElementById('submissions-table-body');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-cyan-400 italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuatkan data terkini dari Google Sheet...</td></tr>`;
+            }
+
+            fetch(googleSheetScriptURL)
+                .then(response => response.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        let cloudRecords = data.map((row, idx) => {
+                            let answersObj = {};
+                            for (let q = 1; q <= 25; q++) {
+                                let ansIndex = 5 + (q - 1) * 2;
+                                let statIndex = 6 + (q - 1) * 2;
+                                answersObj[q] = {
+                                    questionId: q,
+                                    studentAnswer: row[ansIndex] || "",
+                                    correctKeys: "",
+                                    isCorrect: (row[statIndex] === "BETUL")
+                                };
+                            }
+                            return {
+                                id: 'cloud_' + idx,
+                                date: row[0] || new Date().toLocaleString(),
+                                teamName: row[1] || "Tanpa Nama",
+                                teamClass: row[2] || "-",
+                                correctCount: parseInt(row[3]) || 0,
+                                score: parseInt(row[4]) || 0,
+                                answers: answersObj
+                            };
+                        });
+
+                        localStorage.setItem('math_battle_records', JSON.stringify(cloudRecords));
+                        loadTeacherSubmissions();
+                    }
+                })
+                .catch(err => {
+                    console.error("Gagal ambil data dari Google Sheet:", err);
+                    loadTeacherSubmissions();
+                });
+        }
+
+        function loadTeacherSubmissions() {
+            const tbody = document.getElementById('submissions-table-body');
+            tbody.innerHTML = "";
+            const allRecords = JSON.parse(localStorage.getItem('math_battle_records') || '[]');
+            
+            document.getElementById('total-submissions-count').innerText = `Jumlah Kumpulan: ${allRecords.length}`;
+
+            if (allRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 italic">Tiada rekod penyertaan kumpulan ditemui.</td></tr>`;
+                return;
+            }
+
+            [...allRecords].reverse().forEach((rec) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-purple-900/10 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-xs text-gray-400">${rec.date}</td>
+                    <td class="p-3 font-semibold text-white">${rec.teamName}</td>
+                    <td class="p-3 text-cyan-300">${rec.teamClass}</td>
+                    <td class="p-3 text-center font-bold text-green-400">${rec.correctCount} / 25</td>
+                    <td class="p-3 text-right font-orbitron font-bold text-pink-400">${rec.score} / 100</td>
+                    <td class="p-3 text-center">
+                        <button onclick='openDetailModalForRecord(${JSON.stringify(rec)})' class="px-2.5 py-1 bg-cyan-600/20 border border-cyan-500/40 hover:bg-cyan-600/40 text-cyan-300 rounded-lg text-[11px] font-orbitron transition">
+                            <i class="fa-solid fa-eye mr-1"></i> Semak
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openDetailModalForRecord(rec) {
+            document.getElementById('detail-team-title').innerText = `Kumpulan: ${rec.teamName}`;
+            document.getElementById('detail-team-meta').innerText = `Kelas: ${rec.teamClass} | Tarikh: ${rec.date} | Markah: ${rec.score}/100`;
+
+            const tbody = document.getElementById('detail-table-body');
+            tbody.innerHTML = "";
+
+            if (!rec.answers || Object.keys(rec.answers).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">Tiada rekod terperinci bagi sesi ini.</td></tr>`;
+            } else {
+                for (let i = 1; i <= 25; i++) {
+                    const ansData = rec.answers[i];
+                    if (!ansData) continue;
+                    const statusBadge = ansData.isCorrect 
+                        ? `<span class="px-2 py-0.5 bg-green-500/20 border border-green-500/40 text-green-400 rounded text-[10px] font-bold"><i class="fa-solid fa-check mr-1"></i> BETUL</span>`
+                        : `<span class="px-2 py-0.5 bg-pink-500/20 border border-pink-500/40 text-pink-400 rounded text-[10px] font-bold"><i class="fa-solid fa-xmark mr-1"></i> SALAH</span>`;
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-cyan-950/20 transition";
+                    tr.innerHTML = `
+                        <td class="p-2.5 text-center font-orbitron font-bold text-cyan-400">Soalan ${ansData.questionId}</td>
+                        <td class="p-2.5 font-semibold text-white">${ansData.studentAnswer}</td>
+                        <td class="p-2.5 text-purple-300">${ansData.correctKeys}</td>
+                        <td class="p-2.5 text-center">${statusBadge}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
+
+            document.getElementById('teacher-detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('teacher-detail-modal').classList.add('hidden');
+        }
+
+        function exportToCSV() {
+            const allRecords = JSON.parse(localStorage.getItem('math_battle_records') || '[]');
+            if (allRecords.length === 0) {
+                alert("Tiada data untuk dieksport.");
+                return;
+            }
+
+            let csvHeaders = ["Tarikh", "Nama Kumpulan", "Kelas", "Jumlah Betul", "Markah Keseluruhan"];
+            for (let i = 1; i <= 25; i++) {
+                csvHeaders.push(`Q${i}_Jawapan`, `Q${i}_Status`);
+            }
+
+            let csvRows = [csvHeaders.join(",")];
+
+            allRecords.forEach(r => {
+                let row = [
+                    `"${r.date}"`,
+                    `"${r.teamName}"`,
+                    `"${r.teamClass}"`,
+                    r.correctCount,
+                    r.score
+                ];
+
+                for (let i = 1; i <= 25; i++) {
+                    if (r.answers && r.answers[i]) {
+                        const ans = r.answers[i];
+                        const cleanAns = (ans.studentAnswer || "").replace(/"/g, '""');
+                        const status = ans.isCorrect ? "BETUL" : "SALAH";
+                        row.push(`"${cleanAns}"`, `"${status}"`);
+                    } else {
+                        row.push('""', '"TIADA"');
+                    }
+                }
+                csvRows.push(row.join(","));
+            });
+
+            const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Math_Battle_Arena_Laporan_Penuh.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearAllData() {
+            if (confirm("Adakah anda pasti ingin memadam semua rekod markah kumpulan?")) {
+                localStorage.removeItem('math_battle_records');
+                loadTeacherSubmissions();
+            }
+        }
+    </script>
+</body>
+</html>
