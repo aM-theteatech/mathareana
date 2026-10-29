@@ -290,7 +290,7 @@
                 <button onclick="verifyTeacherPin()" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-orbitron font-bold rounded-xl shadow-neon-purple text-xs transition">LOG MASUK GURU</button>
             </div>
 
-            <!-- TEACHER CONTENT SECTION -->
+            <!-- TEACHER DASHBOARD MODAL -->
             <div id="teacher-content-section" class="hidden space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div class="flex items-center space-x-2">
@@ -379,7 +379,7 @@
         // =========================================================================
         // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
         // =========================================================================
-        const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyNgcaGT-s3DB9OKAmiGE3IZdTyJVW9Lr2Bl0hphRjNhavm7y_A3rclwRhjUN81gU5M3Q/exec'; 
+        const googleSheetScriptURL = 'MASUKKAN_WEB_APP_URL_ANDA_DI_SINI'; 
 
         // Start Quiz
         function startBattle(e) {
@@ -623,14 +623,10 @@
         // Teacher Dashboard Modal Logic
         function openTeacherModal() {
             document.getElementById('teacher-modal').classList.remove('hidden');
-            const pinInput = document.getElementById('teacher-pin-input');
-            if (pinInput) pinInput.value = "";
-            const authErr = document.getElementById('auth-error');
-            if (authErr) authErr.classList.add('hidden');
-            const authSec = document.getElementById('teacher-auth-section');
-            if (authSec) authSec.classList.remove('hidden');
-            const contentSec = document.getElementById('teacher-content-section');
-            if (contentSec) contentSec.classList.add('hidden');
+            document.getElementById('teacher-pin-input').value = "";
+            document.getElementById('auth-error').classList.add('hidden');
+            document.getElementById('teacher-auth-section').classList.remove('hidden');
+            document.getElementById('teacher-content-section').classList.add('hidden');
         }
 
         function closeTeacherModal() {
@@ -644,21 +640,20 @@
                 document.getElementById('teacher-content-section').classList.remove('hidden');
                 loadTeacherSubmissions();
                 
-                // Tarik data terus dari Google Sheet apabila guru log masuk
-                if (googleSheetScriptURL && googleSheetScriptURL.includes('https://script.google.com')) {
-                    fetchDataFromGoogleSheet();
-                }
+                // Automatik sync data dari Google Sheet apabila guru berjaya log masuk
+                fetchDataFromGoogleSheet();
             } else {
                 document.getElementById('auth-error').classList.remove('hidden');
             }
         }
 
-        // Fungsi baru untuk retrieve data daripada Google Sheet (GET)
+        // Fungsi baru untuk retrieve (tarik) data daripada Google Sheet menggunakan GET request
         function fetchDataFromGoogleSheet() {
+            const googleSheetScriptURL = 'https://script.google.com/macros/s/AKfycbyNgcaGT-s3DB9OKAmiGE3IZdTyJVW9Lr2Bl0hphRjNhavm7y_A3rclwRhjUN81gU5M3Q/exec';
             if (!googleSheetScriptURL || !googleSheetScriptURL.includes('https://script.google.com')) {
                 return;
             }
-            
+
             const tbody = document.getElementById('submissions-table-body');
             if (tbody) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-cyan-400 italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuatkan data terkini dari Google Sheet...</td></tr>`;
@@ -691,7 +686,10 @@
                             };
                         });
 
+                        // Simpan ke localStorage pelayar guru untuk paparan pantas
                         localStorage.setItem('math_battle_records', JSON.stringify(cloudRecords));
+                        loadTeacherSubmissions();
+                    } else {
                         loadTeacherSubmissions();
                     }
                 })
